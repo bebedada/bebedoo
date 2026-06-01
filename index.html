@@ -40,11 +40,13 @@ body{
     flex:1;
     width:120px;
     font-size:18px;
+    font-weight:600;
 }
 
 .weight{
     width:40px;
     font-size:18px;
+    font-weight:600;
 }
 
 input{
@@ -69,6 +71,7 @@ input{
     text-align:center;
     line-height:22px;
     font-size:12px;
+    cursor:pointer;
 }
 
 .s1{
@@ -78,7 +81,7 @@ input{
 .s2{
     background:#4caf50;
     color:white;
-    border:#4caf50;
+    border:none;
 }
 
 .info{
@@ -87,7 +90,6 @@ input{
 }
 
 .delete{
-    margin-top:10px;
     padding:4px 8px;
     font-size:12px;
 }
@@ -142,7 +144,6 @@ function dday(date){
 
     if(!date) return "날짜 입력";
 
-    let made = new Date(date);
     let expire = new Date(date);
 
     expire.setDate(
@@ -151,28 +152,27 @@ function dday(date){
 
     let today = new Date();
 
-    made.setHours(0,0,0,0);
     expire.setHours(0,0,0,0);
     today.setHours(0,0,0,0);
 
     let diff =
     Math.ceil(
-    (expire-today)/(1000*60*60*24)
+    (expire-today)/(10006060*24)
     );
 
-    if(diff<0){
+    if(diff < 0){
         return "만료";
     }
 
-    return "D-"+diff;
+    return "D-" + diff;
 }
 
 function toggle(i,j){
 
     foods[i].stock[j]++;
 
-    if(foods[i].stock[j]>2){
-        foods[i].stock[j]=0;
+    if(foods[i].stock[j] > 2){
+        foods[i].stock[j] = 0;
     }
 
     save();
@@ -181,7 +181,7 @@ function toggle(i,j){
 
 function render(){
 
-    let html="";
+    let html = "";
 
     for(let i=0;i<foods.length;i++){
 
@@ -193,96 +193,21 @@ function render(){
         let stock =
         item.stock.filter(x=>x===1).length;
 
-        html += `
-        <div class="card">
-
-        <div class="row">
-
-        <input class="name"
-        value="${item.name}"
-        onchange="
-        foods[${i}].name=this.value;
-        save();
-        ">
-
-        <input class="weight"
-        type="number"
-        value="${item.weight}"
-        onchange="
-        foods[${i}].weight=this.value;
-        save();
-        ">
-
-        <b>g</b>
-
-        </div>
-
-        <div style="
-margin-top:10px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-">
-
-<div>
-
-제조일
-
-<input type="date"
-value="${item.date}"
-onchange="
-foods[${i}].date=this.value;
-save();
-render();
-">
-</div>
-
-<div>
-${dday(item.date)}
-</div>
-
-</div>
-
-        <div class="stocks">
-        `;
+        html +=         <div class="card">          <div class="row">          <input         class="name"         value="${item.name}"         onchange="         foods[${i}].name=this.value;         save();         ">          <input         class="weight"         type="number"         value="${item.weight}"         onchange="         foods[${i}].weight=this.value;         save();         ">          <b>g</b>          </div>          <div style="         margin-top:10px;         display:flex;         justify-content:space-between;         align-items:center;         ">          <div>         ${dday(item.date)}         </div>          <div>         제조일         <input         type="date"         value="${item.date}"         onchange="         foods[${i}].date=this.value;         save();         render();         ">         </div>          </div>          <div class="stocks">        ;
 
         for(let j=0;j<10;j++){
 
-            let s=item.stock[j];
+            let s = item.stock[j];
 
-            let cls="";
+            let cls = "";
 
             if(s===1) cls="s1";
             if(s===2) cls="s2";
 
-            html += `
-            <div
-            class="stock ${cls}"
-            onclick="toggle(${i},${j})">
-            ${s===2?'✓':''}
-            </div>
-            `;
+            html +=             <div             class="stock ${cls}"             onclick="toggle(${i},${j})">             ${s===2 ? '✓' : ''}             </div>            ;
         }
 
-        html += `
-        </div>
-
-        <div class="info">
-        사용 ${done} | 남음 ${stock}
-        </div>
-
-        <button
-        class="delete"
-        onclick="
-        foods.splice(${i},1);
-        save();
-        render();
-        ">
-        삭제
-        </button>
-
-        </div>
-        `;
+        html +=         </div>          <div style="         margin-top:8px;         display:flex;         justify-content:space-between;         align-items:center;         ">          <div>         완료 ${done} | 재고 ${stock}         </div>          <button         class="delete"         onclick="         foods.splice(${i},1);         save();         render();         ">         삭제         </button>          </div>          </div>        ;
     }
 
     document.getElementById(
