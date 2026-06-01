@@ -217,23 +217,31 @@ function render(){
 
         </div>
 
-        <div style="margin-top:10px">
+        <div style="
+margin-top:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
 
-        제조일
+<div>
 
-        <input type="date"
-        value="${item.date}"
-        onchange="
-        foods[${i}].date=this.value;
-        save();
-        render();
-        ">
+제조일
 
-        </div>
+<input type="date"
+value="${item.date}"
+onchange="
+foods[${i}].date=this.value;
+save();
+render();
+">
+</div>
 
-        <div class="info">
-        ${dday(item.date)}
-        </div>
+<div>
+${dday(item.date)}
+</div>
+
+</div>
 
         <div class="stocks">
         `;
@@ -260,7 +268,7 @@ function render(){
         </div>
 
         <div class="info">
-        완료 ${done} | 재고 ${stock}
+        사용 ${done} | 남음 ${stock}
         </div>
 
         <button
