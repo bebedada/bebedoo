@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이유식 재고관리</title>
+
+<style>
+body{
+    margin:0;
+    padding:15px;
+    background:#f6f6f6;
+    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+}
+
+h1{
+    text-align:center;
+}
+
+button{
+    border:none;
+    border-radius:10px;
+    padding:10px 14px;
+    cursor:pointer;
+}
+
+.add-btn{
+    width:100%;
+    background:#7c6cff;
+    color:white;
+    font-size:16px;
+    margin-bottom:15px;
+}
+
+.card{
+    background:white;
+    border-radius:15px;
+    padding:15px;
+    margin-bottom:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.top{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+input{
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:8px;
+}
+
+.name{
+    flex:1;
+}
+
+.weight{
+    width:80px;
+}
+
+.info{
+    margin:10px 0;
+    font-size:14px;
+}
+
+.dday{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:8px;
+    font-weight:bold;
+}
+
+.normal{
+    background:#e8f5e9;
+}
+
+.warning{
+    background:#fff8e1;
+}
+
+.expired{
+    background:#ffebee;
+    color:#c62828;
+}
+
+.stock-grid{
+    display:grid;
+    grid-template-columns:repeat(10,1fr);
+    gap:6px;
+    margin-top:10px;
+}
+
+.stock{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    border:2px solid #777;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+}
+
+.state0{
+    background:white;
+}
+
+.state1{
+    background:#666;
+    border-color:#666;
+}
+
+.state2{
+    background:#4caf50;
+    border-color:#4caf50;
+    color:white;
+}
+
+.summary{
+    margin-top:12px;
+    font-size:13px;
+    color:#555;
+}
+
+.delete{
+    background:#ff5252;
+    color:white;
+    margin-top:10px;
+    width:100%;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍼 이유식 재고관리</h1>
+
+<button class="add-btn" onclick="addItem()">
++ 이유식 추가
+</button>
+
+<div id="list"></div>
+
+<script>
+
+let items =
+JSON.parse(localStorage.getItem('babyFood')) || [];
+
+if(items.length===0){
+    items.push(createItem());
+}
+
+function createItem(){
+    return {
+        name:'새 이유식',
+        date:'',
+        weight:60,
+        stock:Array(10).fill(0)
+    };
+}
+
+function save(){
+    localStorage.setItem(
+        'babyFood',
+        JSON.stringify(items)
+    );
+}
+
+function getDday(date){
+
+    if(!date) return null;
+
+    let made = new Date(date);
+
+    let expire = new Date(made);
+    expire.setDate(expire.getDate()+21);
+
+    let today = new Date();
+
+    today.setHours(0,0,0,0);
+    expire.setHours(0,0,0,0);
+
+    return Math.ceil(
+        (expire-today)/(1000*60*60*24)
+    );
+}
+
+function render(){
+
+    const list =
+    document.getElementById('list');
+
+    list.innerHTML='';
+
+    items.forEach((item,index)=>{
+
+        let dday = getDday(item.date);
+
+        let dClass='normal';
+        let dText='날짜 입력';
+
+        if(dday!==null){
+
+            if(dday<0){
+                dClass='expired';
+                dText='만료';
+            }
+            else if(dday<=3){
+                dClass='warning';
+                dText='D-'+dday;
+            }
+            else{
+                dText='D-'+dday;
+            }
+        }
+
+        let remain =
+        item.stock.filter(x=>x===0).length;
+
+        let used =
+        item.stock.filter(x=>x===1).length;
+
+        let done =
+        item.stock.filter(x=>x===2).length;
+
+        const card =
+        document.createElement('div');
+
+        card.className='card';
+
+        card.innerHTML=`
+
+        <div class="top">
+
+            <input
+             class="name"
+             value="${item.name}"
+             onchange="updateName(${index},this.value)"
+            >
+
+            <input
+             class="weight"
+             type="number"
+             value="${item.weight}"
+             onchange="updateWeight(${index},this.value)"
+            >
+
+        </div>
+
+        <div>
+
+            제조일 :
+            <input
+             type="date"
+             value="${item.date}"
+             onchange="updateDate(${index},this.value)"
+            >
+
+        </div>
+
+        <div class="info">
+            <span class="dday ${dClass}">
+                ${dText}
+            </span>
+        </div>
+
+        <div class="stock-grid">
+        ${
+            item.stock.map((s,i)=>{
+
+                let text='';
+                let cls='state0';
+
+                if(s===1){
+                    cls='state1';
+                }
+
+                if(s===2){
+                    cls='state2';
+                    text='✓';
+                }
+
+                return `
+                <div
+                class="stock ${cls}"
+                onclick="toggleStock(${index},${i})"
+                >
+                ${text}
+                </div>`;
+            }).join('')
+        }
+        </div>
+
+        <div class="summary">
+            남음 ${remain} /
+            사용 ${used} /
+            완료 ${done}
+        </div>
+
+        <button
+         class="delete"
+         onclick="removeItem(${index})">
+         삭제
+        </button>
+
+        `;
+
+        list.appendChild(card);
+    });
+
+    save();
+}
+
+function addItem(){
+    items.push(createItem());
+    render();
+}
+
+function removeItem(index){
+
+    if(confirm('삭제할까?')){
+        items.splice(index,1);
+
+        if(items.length===0){
+            items.push(createItem());
+        }
+
+        render();
+    }
+}
+
+function updateName(i,v){
+    items[i].name=v;
+    save();
+}
+
+function updateWeight(i,v){
+    items[i].weight=v;
+    save();
+}
+
+function updateDate(i,v){
+    items[i].date=v;
+    render();
+}
+
+function toggleStock(i,j){
+
+    items[i].stock[j]++;
+
+    if(items[i].stock[j]>2){
+        items[i].stock[j]=0;
+    }
+
+    render();
+}
+
+render();
+
+</script>
+
+</body>
+</html>
