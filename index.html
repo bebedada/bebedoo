@@ -270,10 +270,13 @@ function render(){
                 <button
                     class="delete"
                     onclick="
-                    foods.splice(${i},1);
-                    save();
-                    render();
-                    ">
+                    if(confirm('삭제할까요?')) {
+                        foods.splice(${i},1);
+                        save();
+                        render();
+                     }
+                     "
+                 >
                     삭제
                 </button>
 
