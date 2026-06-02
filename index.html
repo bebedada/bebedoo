@@ -131,15 +131,12 @@ function addFood(){
 }
 
 function dday(date){
-
-    if(!date) return "날짜 입력";
-
+    if(!date) return { text:"날짜 입력", danger:false };
+   
     let expire = new Date(date);
-
     expire.setDate(expire.getDate() + 14);
-
+    
     let today = new Date();
-
     expire.setHours(0,0,0,0);
     today.setHours(0,0,0,0);
 
@@ -148,12 +145,15 @@ function dday(date){
     );
 
     if(diff < 0){
-        return "만료";
+        return { text:"만료", danger:true };
     }
 
-    return "D-" + diff;
+    return {
+        text: "D-" + diff,
+        danger: diff <= 3
+    };
 }
-
+    
 function toggle(i,j){
 
     foods[i].stock[j]++;
@@ -173,6 +173,8 @@ function render(){
     for(let i=0;i<foods.length;i++){
 
         let item = foods[i];
+        
+        let d = dday(item.date);
 
         let done =
         item.stock.filter(x => x === 2).length;
@@ -213,8 +215,8 @@ function render(){
                 align-items:center;
             ">
 
-                <div>
-                    ${dday(item.date)}
+                <div style="color:${d.danger ? 'red' : '#333'}; font-weight:${d.danger ? '700' : '400'}">
+                    ${d.text}
                 </div>
 
                 <div>
