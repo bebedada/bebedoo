@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>가로세로 비율 측정기</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    margin:20px;
+    text-align:center;
+    background:#f5f5f5;
+}
+
+h2{
+    margin-bottom:10px;
+}
+
+canvas{
+    border:1px solid #ccc;
+    max-width:100%;
+    touch-action:none;
+    background:white;
+}
+
+#status{
+    font-size:18px;
+    font-weight:bold;
+    margin:15px 0;
+}
+
+#result{
+    font-size:20px;
+    margin-top:15px;
+    line-height:1.8;
+}
+
+button{
+    margin-top:15px;
+    padding:10px 20px;
+    font-size:16px;
+}
+</style>
+</head>
+<body>
+
+<h2>가로세로 비율 측정기</h2>
+
+<input type="file" id="imageInput" accept="image/*">
+
+<div id="status">
+사진을 선택하세요
+</div>
+
+<br>
+
+<canvas id="canvas"></canvas>
+
+<br>
+
+<button onclick="resetPoints()">초기화</button>
+
+<div id="result"></div>
+
+<script>
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const imageInput = document.getElementById('imageInput');
+const statusDiv = document.getElementById('status');
+const resultDiv = document.getElementById('result');
+
+const labels = ["위 점", "아래 점", "왼쪽 점", "오른쪽 점"];
+
+let img = new Image();
+let points = [];
+
+imageInput.addEventListener('change', e => {
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(ev){
+
+        img.onload = function(){
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            points = [];
+
+            draw();
+
+            statusDiv.textContent =
+            "위 점을 찍어주세요";
+        };
+
+        img.src = ev.target.result;
+    };
+
+    reader.readAsDataURL(file);
+});
+
+canvas.addEventListener('click', function(e){
+
+    if(!img.src) return;
+
+    if(points.length >= 4) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    points.push({x,y});
+
+    draw();
+
+    if(points.length < 4){
+        statusDiv.textContent =
+        labels[points.length] + "을 찍어주세요";
+    }else{
+        statusDiv.textContent =
+        "측정 완료";
+        calculate();
+    }
+
+});
+
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(img.src){
+        ctx.drawImage(img,0,0);
+    }
+
+    points.forEach((p,i)=>{
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,8,0,Math.PI*2);
+        ctx.fillStyle='red';
+        ctx.fill();
+
+        ctx.fillStyle='white';
+        ctx.font='14px sans-serif';
+        ctx.fillText(i+1,p.x-4,p.y+4);
+    });
+
+    if(points.length === 4){
+
+        const top = points[0];
+        const bottom = points[1];
+        const left = points[2];
+        const right = points[3];
+
+        const centerX = (left.x + right.x)/2;
+        const centerY = (top.y + bottom.y)/2;
+
+        const width =
+        Math.hypot(right.x-left.x,right.y-left.y);
+
+        const height =
+        Math.hypot(bottom.x-top.x,bottom.y-top.y);
+
+        ctx.beginPath();
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 4;
+
+        ctx.ellipse(
+            centerX,
+            centerY,
+            width/2,
+            height/2,
+            0,
+            0,
+            Math.PI*2
+        );
+
+        ctx.stroke();
+    }
+}
+
+function calculate(){
+
+    const top = points[0];
+    const bottom = points[1];
+    const left = points[2];
+    const right = points[3];
+
+    const width =
+    Math.hypot(
+        right.x-left.x,
+        right.y-left.y
+    );
+
+    const height =
+    Math.hypot(
+        bottom.x-top.x,
+        bottom.y-top.y
+    );
+
+    let ratioText;
+
+    if(width >= height){
+
+        ratioText =
+        (width/height).toFixed(2)
+        + " : 1";
+
+    }else{
+
+        ratioText =
+        "1 : " +
+        (height/width).toFixed(2);
+    }
+
+    resultDiv.innerHTML = `
+        가로 : ${width.toFixed(0)} px<br>
+        세로 : ${height.toFixed(0)} px<br><br>
+        <b>비율<br>${ratioText}</b>
+    `;
+}
+
+function resetPoints(){
+
+    points = [];
+    resultDiv.innerHTML = "";
+
+    if(img.src){
+        statusDiv.textContent =
+        "위 점을 찍어주세요";
+    }else{
+        statusDiv.textContent =
+        "사진을 선택하세요";
+    }
+
+    draw();
+}
+
+</script>
+
+</body>
+</html>
