@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>CVAI 측정기</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    margin:20px;
+    text-align:center;
+    background:#f5f5f5;
+}
+
+h2{
+    margin-bottom:10px;
+}
+
+canvas{
+    border:1px solid #ccc;
+    max-width:100%;
+    background:white;
+    touch-action:none;
+}
+
+#status{
+    margin:15px 0;
+    font-size:18px;
+    font-weight:bold;
+}
+
+#result{
+    margin-top:20px;
+    font-size:20px;
+    line-height:1.8;
+}
+
+#notice{
+    margin-top:25px;
+    font-size:14px;
+    color:#666;
+    line-height:1.6;
+}
+
+button{
+    margin:10px 5px;
+    padding:10px 20px;
+    font-size:16px;
+}
+
+.example{
+    margin:15px auto;
+    padding:10px;
+    max-width:500px;
+    background:#fff;
+    border:1px solid #ddd;
+    font-size:14px;
+    line-height:1.5;
+}
+</style>
+</head>
+<body>
+
+<h2>CVAI 측정기</h2>
+
+<div class="example">
+대각선 A와 B를 순서대로 지정하세요.<br>
+① A 시작 → ② A 끝 → ③ B 시작 → ④ B 끝
+</div>
+
+<input type="file" id="imageInput" accept="image/*">
+
+<div id="status">
+사진을 선택하세요
+</div>
+
+<br>
+
+<canvas id="canvas"></canvas>
+
+<br>
+
+<button onclick="resetPoints()">초기화</button>
+
+<div id="result"></div>
+
+<div id="notice">
+※ 본 결과는 사진상 측정값을 기반으로 한 참고용 정보입니다.<br>
+의료적 진단, 치료 또는 예후 판단을 대체하지 않습니다.
+</div>
+
+<script>
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const imageInput = document.getElementById('imageInput');
+const statusDiv = document.getElementById('status');
+const resultDiv = document.getElementById('result');
+
+const labels = [
+    "대각선 A 끝점을 찍어주세요",
+    "대각선 B 시작점을 찍어주세요",
+    "대각선 B 끝점을 찍어주세요",
+    "측정 완료"
+];
+
+let img = new Image();
+let points = [];
+
+let dragging = false;
+let dragIndex = -1;
+
+imageInput.addEventListener('change', e => {
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(ev){
+
+        img.onload = function(){
+
+            canvas.width = img.width;
+            canvas.height = img.height;
+
+            points = [];
+            draw();
+
+            resultDiv.innerHTML = "";
+            statusDiv.textContent =
+            "대각선 A 시작점을 찍어주세요";
+        };
+
+        img.src = ev.target.result;
+    };
+
+    reader.readAsDataURL(file);
+});
+
+function getCanvasPos(e){
+
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+        x:(e.clientX - rect.left) * (canvas.width / rect.width),
+        y:(e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+}
+
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('touchstart', startDrag);
+
+function startDrag(e){
+
+    if(points.length < 4) return;
+
+    const pos = getCanvasPos(
+        e.touches ? e.touches[0] : e
+    );
+
+    for(let i=0;i<points.length;i++){
+
+        const dx = pos.x - points[i].x;
+        const dy = pos.y - points[i].y;
+
+        if(Math.sqrt(dx*dx + dy*dy) < 20){
+
+            dragging = true;
+            dragIndex = i;
+            return;
+        }
+    }
+}
+
+canvas.addEventListener('mousemove', moveDrag);
+canvas.addEventListener('touchmove', moveDrag);
+
+function moveDrag(e){
+
+    if(!dragging) return;
+
+    e.preventDefault();
+
+    const pos = getCanvasPos(
+        e.touches ? e.touches[0] : e
+    );
+
+    points[dragIndex] = pos;
+
+    draw();
+    calculate();
+}
+
+canvas.addEventListener('mouseup', endDrag);
+canvas.addEventListener('mouseleave', endDrag);
+canvas.addEventListener('touchend', endDrag);
+
+function endDrag(){
+
+    dragging = false;
+    dragIndex = -1;
+}
+
+canvas.addEventListener('click', function(e){
+
+    if(!img.src) return;
+
+    if(points.length >= 4) return;
+
+    const pos = getCanvasPos(e);
+
+    points.push(pos);
+
+    draw();
+
+    if(points.length < 4){
+
+        statusDiv.textContent =
+        labels[points.length - 1];
+
+    }else{
+
+        statusDiv.textContent =
+        "점을 드래그하여 수정할 수 있습니다";
+
+        calculate();
+    }
+});
+
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(img.src){
+        ctx.drawImage(img,0,0);
+    }
+
+    if(points.length >= 2){
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        ctx.lineTo(points[1].x, points[1].y);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+    }
+
+    if(points.length >= 4){
+
+        ctx.beginPath();
+        ctx.moveTo(points[2].x, points[2].y);
+        ctx.lineTo(points[3].x, points[3].y);
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+    }
+
+    points.forEach((p,i)=>{
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,10,0,Math.PI*2);
+        ctx.fillStyle = "#ff4444";
+        ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillText(i+1,p.x-4,p.y+5);
+    });
+}
+
+function getGrade(cvai){
+
+    if(cvai < 3.5){
+        return "정상 범위";
+    }
+    else if(cvai < 6.25){
+        return "경도 비대칭";
+    }
+    else if(cvai < 8.75){
+        return "중등도 비대칭";
+    }
+    else if(cvai < 11){
+        return "중증 비대칭";
+    }
+    else{
+        return "매우 중증 비대칭";
+    }
+}
+
+function calculate(){
+
+    if(points.length < 4) return;
+
+    const A = Math.hypot(
+        points[1].x - points[0].x,
+        points[1].y - points[0].y
+    );
+
+    const B = Math.hypot(
+        points[3].x - points[2].x,
+        points[3].y - points[2].y
+    );
+
+    const longer = Math.max(A,B);
+    const shorter = Math.min(A,B);
+
+    const cvai =
+    ((longer - shorter) / longer) * 100;
+
+    const grade = getGrade(cvai);
+
+    resultDiv.innerHTML = `
+        <b>측정 결과</b><br><br>
+
+        대각선 A : ${A.toFixed(0)} px<br>
+        대각선 B : ${B.toFixed(0)} px<br><br>
+
+        <b>CVAI</b><br>
+        ${cvai.toFixed(2)}%<br><br>
+
+        <b>판정</b><br>
+        ${grade}
+    `;
+}
+
+function resetPoints(){
+
+    points = [];
+
+    resultDiv.innerHTML = "";
+
+    if(img.src){
+        statusDiv.textContent =
+        "대각선 A 시작점을 찍어주세요";
+    }
+    else{
+        statusDiv.textContent =
+        "사진을 선택하세요";
+    }
+
+    draw();
+}
+
+</script>
+
+</body>
+</html>
