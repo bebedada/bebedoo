@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>식단표</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:16px}
+#add{width:100%;padding:14px;border:none;background:#4caf50;color:#fff;font-size:18px;border-radius:12px;font-weight:700}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:16px;margin:18px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+.header{display:flex;align-items:center;padding:12px 14px;background:#fafafa;border-bottom:1px solid #eee;gap:8px}
+.title{flex:1;text-align:center;font-size:20px;font-weight:bold}
+.icon{border:none;background:#f0f0f0;border-radius:10px;padding:8px 10px}
+.today{border:2px solid #6fcf97}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{border:1px solid #eee}
+th{background:#f8f8f8;padding:8px}
+.cell{min-height:36px;padding:8px;outline:none}
+.bottom{display:flex;justify-content:space-around;padding:10px;background:#fcfcfc}
+.bottom input{width:42%;padding:8px;text-align:center;border:1px solid #ddd;border-radius:8px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<button id="add">+ 식단표 추가</button>
+<div id="wrap"></div>
+<script>
+let data=JSON.parse(localStorage.getItem("meal_v2")||"[]");
+const W=["일","월","화","수","목","금","토"];
+const iso=()=>new Date().toISOString().slice(0,10);
+const fmt=d=>{let x=new Date(d+"T00:00");return `${x.getMonth()+1}/${x.getDate()}(${W[x.getDay()]})`;};
+function save(){localStorage.setItem("meal_v2",JSON.stringify(data))}
+function nextDate(d){
+ let t=new Date(d+"T00:00");
+ while(true){
+  t.setDate(t.getDate()+1);
+  let s=t.toISOString().slice(0,10);
+  if(!data.some(v=>v.date===s))return s;
+ }
+}
+function blank(date){return{date,id:Date.now()+Math.random(),cells:Array(15).fill(""),eat:["",""]}}
+function render(){
+ data.sort((a,b)=>a.date.localeCompare(b.date));
+ wrap.innerHTML="";
+ data.forEach(card=>{
+  let c=document.createElement("div");
+  c.className="card"+(card.date===iso()?" today":"");
+  let rows="";
+  for(let r=0;r<5;r++){
+    rows+="<tr>";
+    for(let col=0;col<3;col++){
+      let i=r*3+col;
+      rows+=`<td><div class="cell" contenteditable data-i="${i}">${card.cells[i]||""}</div></td>`;
+    }
+    rows+="</tr>";
+  }
+  c.innerHTML=`<div class="header">
+<button class="icon cal">📅</button>
+<div class="title">${fmt(card.date)}</div>
+<button class="icon copy">📋</button>
+<button class="icon del">✕</button>
+<input class="hidden picker" type="date" value="${card.date}">
+</div>
+<table><tr><th>아침</th><th>점심</th><th>저녁</th></tr>${rows}</table>
+<div class="bottom">
+<input inputmode="numeric" placeholder="섭취량" value="${card.eat[0]}">
+<span style="align-self:center">/</span>
+<input inputmode="numeric" placeholder="이유식량" value="${card.eat[1]}">
+</div>`;
+  wrap.appendChild(c);
+  let edits=[...c.querySelectorAll(".cell")];
+  edits.forEach((e,idx)=>{
+    e.oninput=()=>{card.cells[idx]=e.innerText;save();}
+    e.onkeydown=(ev)=>{if(ev.key==="Enter"){ev.preventDefault();(edits[idx+1]||c.querySelectorAll("input")[1]).focus();}}
+  });
+  let nums=c.querySelectorAll(".bottom input");
+  nums[0].oninput=()=>{card.eat[0]=nums[0].value;save();}
+  nums[1].oninput=()=>{card.eat[1]=nums[1].value;save();}
+  nums[0].onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();nums[1].focus();}}
+  nums[1].onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();let n=c.nextElementSibling;if(n)n.querySelector(".cell").focus();}}
+  c.querySelector(".cal").onclick=()=>c.querySelector(".picker").showPicker?c.querySelector(".picker").showPicker():c.querySelector(".picker").click();
+  c.querySelector(".picker").onchange=e=>{card.date=e.target.value;save();render();}
+  c.querySelector(".copy").onclick=()=>{let cp=JSON.parse(JSON.stringify(card));cp.id=Date.now()+Math.random();cp.date=nextDate(card.date);data.push(cp);save();render();}
+  c.querySelector(".del").onclick=()=>{if(confirm("삭제하시겠습니까?")){data=data.filter(x=>x.id!==card.id);save();render();}}
+ });
+}
+document.getElementById("add").onclick=()=>{data.push(blank(iso()));save();render();}
+if(!data.length)data.push(blank(iso()));
+render();
+</script>
+</body>
+</html>
