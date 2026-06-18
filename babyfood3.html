@@ -66,9 +66,9 @@ function render(){
 </div>
 <table><tr><th>아침</th><th>점심</th><th>저녁</th></tr>${rows}</table>
 <div class="bottom">
-<input placeholder="섭취량" value="${card.eat[0]}">
+<input inputmode="numeric" placeholder="섭취량" value="${card.eat[0]}">
 <span style="align-self:center">/</span>
-<input placeholder="이유식량" value="${card.eat[1]}">
+<input inputmode="numeric" placeholder="이유식량" value="${card.eat[1]}">
 </div>`;
   wrap.appendChild(c);
   let edits=[...c.querySelectorAll(".cell")];
