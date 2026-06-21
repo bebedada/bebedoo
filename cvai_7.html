@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>사두증 · 단두증 측정 테스트</title>
+
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --panel: #ffffff;
+      --border: #d0d0d0;
+      --text: #222222;
+      --muted: #666666;
+      --red: #ef4438;
+      --green: #55bf62;
+      --blue: #178bff;
+      --orange: #f5a623;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 14px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 4px 0 10px;
+      font-size: 23px;
+      line-height: 1.35;
+    }
+
+    button,
+    .file-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 96px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      font-size: 15px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    button:active,
+    .file-button:active {
+      transform: translateY(1px);
+    }
+
+    #imgInput {
+      display: none;
+    }
+
+    .wrap {
+      width: min(100%, 720px);
+      margin: 0 auto;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0 8px;
+    }
+
+    .step-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 8px;
+    }
+
+    #stepGuide {
+      flex: 1;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .guide-toggle {
+      flex: 0 0 auto;
+      min-width: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      gap: 3px;
+    }
+
+    .guide-toggle::after {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-left: 4px;
+      border-right: 1.6px solid currentColor;
+      border-bottom: 1.6px solid currentColor;
+      transform: rotate(45deg) translateY(-2px);
+      transition: transform 0.18s ease;
+    }
+
+    .guide-toggle.is-open::after {
+      transform: rotate(225deg) translateY(-1px);
+    }
+
+    .guide-card {
+      display: none;
+      margin: 0 auto 10px;
+      padding: 10px 12px 12px;
+      background: #eeeeee;
+      border-radius: 10px;
+    }
+
+    .guide-card.is-open {
+      display: block;
+    }
+
+    .guide-title {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .guide-svg {
+      display: block;
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+      margin: 0 auto;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      border: 1px solid #cccccc;
+      background: var(--panel);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    canvas.is-empty {
+      cursor: pointer;
+    }
+
+    #result {
+      min-height: 1em;
+      margin-top: 15px;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .notice {
+      margin: 18px auto 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+    <h1>사두증 · 단두증 측정 테스트</h1>
+
+    <div class="button-row">
+      <label for="imgInput" class="file-button">사진선택</label>
+      <input type="file" id="imgInput" accept="image/*">
+      <button type="button" id="resetBtn">초기화</button>
+    </div>
+
+    <div class="step-row">
+      <p id="stepGuide" aria-live="polite">사진을 선택하세요</p>
+      <button type="button" id="guideToggle" class="guide-toggle" aria-expanded="false">사용안내</button>
+    </div>
+
+    <section id="guideCard" class="guide-card" aria-label="클릭 순서 안내">
+      <p class="guide-title">사진을 첨부한 후, 아래 순서대로 점을 찍어주세요.</p>
+
+      <svg class="guide-svg" viewBox="0 0 720 300" role="img" aria-label="1번부터 8번까지 클릭 위치 안내 이미지">
+        <defs>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.14" />
+          </filter>
+        </defs>
+
+        <!-- 1~4: 머리 상하좌우 기준점 -->
+        <circle cx="190" cy="155" r="112" fill="#dddddd" />
+        <text x="190" y="163" text-anchor="middle" font-size="28" fill="#777777">머리</text>
+
+        <g filter="url(#softShadow)" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">
+          <circle cx="190" cy="44" r="30" fill="#ef4438" />
+          <text x="190" y="52">1</text>
+
+          <circle cx="190" cy="266" r="30" fill="#ef4438" />
+          <text x="190" y="274">2</text>
+
+          <circle cx="78" cy="155" r="30" fill="#ef4438" />
+          <text x="78" y="163">3</text>
+
+          <circle cx="302" cy="155" r="30" fill="#ef4438" />
+          <text x="302" y="163">4</text>
+        </g>
+
+        <!-- 5~8: 대각선 길이 비교 기준점 -->
+        <circle cx="530" cy="155" r="112" fill="#dddddd" />
+        <line x1="455" y1="62" x2="605" y2="248" stroke="#c7c7c7" stroke-width="5" stroke-dasharray="8 8" />
+        <line x1="605" y1="62" x2="455" y2="248" stroke="#c7c7c7" stroke-width="5" stroke-dasharray="8 8" />
+        <text x="530" y="163" text-anchor="middle" font-size="28" fill="#777777">머리</text>
+
+        <g filter="url(#softShadow)" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">
+          <circle cx="455" cy="62" r="30" fill="#55bf62" />
+          <text x="455" y="70">5</text>
+
+          <circle cx="605" cy="248" r="30" fill="#55bf62" />
+          <text x="605" y="256">6</text>
+
+          <circle cx="605" cy="62" r="30" fill="#55bf62" />
+          <text x="605" y="70">7</text>
+
+          <circle cx="455" cy="248" r="30" fill="#55bf62" />
+          <text x="455" y="256">8</text>
+        </g>
+      </svg>
+    </section>
+
+    <canvas id="cv" aria-label="사진 측정 영역"></canvas>
+
+    <div id="result" aria-live="polite"></div>
+
+    <p class="notice">참고용 결과이며 의료적 진단을 대체하지 않습니다.</p>
+  </main>
+
+  <script>
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
+    const result = document.getElementById('result');
+    const imgInput = document.getElementById('imgInput');
+    const resetBtn = document.getElementById('resetBtn');
+    const stepGuide = document.getElementById('stepGuide');
+    const guideToggle = document.getElementById('guideToggle');
+    const guideCard = document.getElementById('guideCard');
+
+    const displayPointRadius = 10;
+    const displayHitRadius = 36;
+    const previewOffset = { x: -42, y: -42 };
+    const emptyCanvasSize = { width: 760, height: 520 };
+    const stepMessages = [
+      '위쪽(1번) 점을 찍어주세요',
+      '아래쪽(2번) 점을 찍어주세요',
+      '왼쪽(3번) 점을 찍어주세요',
+      '오른쪽(4번) 점을 찍어주세요',
+      '좌측상단(5번) 점을 찍어주세요',
+      '우측하단(6번) 점을 찍어주세요',
+      '우측상단(7번) 점을 찍어주세요',
+      '좌측하단(8번) 점을 찍어주세요',
+    ];
+
+    let img = new Image();
+    let head = [];
+    let diag = [];
+    let drag = null;
+
+    let crop = {
+      sx: 0,
+      sy: 0,
+      sw: 0,
+      sh: 0,
+    };
+
+    function getCanvasScale() {
+      const rect = cv.getBoundingClientRect();
+      return cv.width / rect.width || 1;
+    }
+
+    function toCanvasSize(displaySize) {
+      return displaySize * getCanvasScale();
+    }
+
+    function hasImage() {
+      return Boolean(img.src);
+    }
+
+    function updateStepGuide() {
+      if (!hasImage()) {
+        stepGuide.textContent = '사진을 선택하세요';
+        return;
+      }
+
+      const pointCount = head.length + diag.length;
+      stepGuide.textContent = stepMessages[pointCount] || '점을 드래그하여 위치를 수정할 수 있습니다';
+    }
+
+    function setupEmptyCanvas() {
+      img = new Image();
+      cv.classList.add('is-empty');
+      cv.width = emptyCanvasSize.width;
+      cv.height = emptyCanvasSize.height;
+      updateStepGuide();
+      draw();
+    }
+
+    function setupCrop() {
+      const targetRatio = 1 / 1.2;
+
+      if ((img.width / img.height) > targetRatio) {
+        crop.sh = img.height;
+        crop.sw = img.height * targetRatio;
+        crop.sx = (img.width - crop.sw) / 2;
+        crop.sy = 0;
+      } else {
+        crop.sw = img.width;
+        crop.sh = img.width / targetRatio;
+        crop.sx = 0;
+        crop.sy = (img.height - crop.sh) / 2;
+      }
+
+      cv.classList.remove('is-empty');
+      cv.width = Math.round(crop.sw);
+      cv.height = Math.round(crop.sh);
+    }
+
+    function openPhotoPicker() {
+      imgInput.click();
+    }
+
+    imgInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = (loadEvent) => {
+        img.onload = () => {
+          setupCrop();
+          head = [];
+          diag = [];
+          drag = null;
+          result.innerHTML = '';
+          updateStepGuide();
+          draw();
+        };
+
+        img.src = loadEvent.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    resetBtn.addEventListener('click', resetAll);
+
+    guideToggle.addEventListener('click', () => {
+      const isOpen = guideCard.classList.toggle('is-open');
+      guideToggle.classList.toggle('is-open', isOpen);
+      guideToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    function getPointer(event) {
+      const rect = cv.getBoundingClientRect();
+
+      return {
+        x: (event.clientX - rect.left) * (cv.width / rect.width),
+        y: (event.clientY - rect.top) * (cv.height / rect.height),
+      };
+    }
+
+    function hit(point, target) {
+      return Math.hypot(point.x - target.x, point.y - target.y) < toCanvasSize(displayHitRadius);
+    }
+
+    function findDragTarget(point) {
+      for (let i = 0; i < head.length; i += 1) {
+        if (hit(point, head[i])) return { type: 'head', index: i };
+      }
+
+      for (let i = 0; i < diag.length; i += 1) {
+        if (hit(point, diag[i])) return { type: 'diag', index: i };
+      }
+
+      return null;
+    }
+
+    function addPoint(point) {
+      if (head.length < 4) {
+        head.push(point);
+      } else if (diag.length < 4) {
+        diag.push(point);
+      }
+
+      updateStepGuide();
+      draw();
+
+      if (diag.length === 4) {
+        calc();
+      }
+    }
+
+    cv.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+
+      if (!hasImage()) {
+        openPhotoPicker();
+        return;
+      }
+
+      cv.setPointerCapture(event.pointerId);
+
+      const point = getPointer(event);
+      const target = findDragTarget(point);
+
+      if (target) {
+        drag = {
+          ...target,
+          pointerId: event.pointerId,
+        };
+      } else {
+        drag = null;
+      }
+    });
+
+    cv.addEventListener('pointermove', (event) => {
+      if (!drag || drag.pointerId !== event.pointerId) return;
+
+      event.preventDefault();
+      const point = getPointer(event);
+
+      if (drag.type === 'head') {
+        head[drag.index] = point;
+      } else {
+        diag[drag.index] = point;
+      }
+
+      draw(point);
+
+      if (diag.length === 4) {
+        calc();
+      }
+    });
+
+    cv.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+
+      if (!hasImage()) {
+        drag = null;
+        return;
+      }
+
+      if (!drag) {
+        addPoint(getPointer(event));
+      }
+
+      drag = null;
+      draw();
+    });
+
+    cv.addEventListener('pointercancel', () => {
+      drag = null;
+      draw();
+    });
+
+    function drawGuide(cx, cy, deg) {
+      const radian = deg * Math.PI / 180;
+      const len = Math.max(cv.width, cv.height);
+      const dx = Math.sin(radian) * len;
+      const dy = Math.cos(radian) * len;
+
+      ctx.save();
+      ctx.setLineDash([12, 8]);
+      ctx.strokeStyle = '#00a0ff';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx - dx, cy + dy);
+      ctx.lineTo(cx + dx, cy - dy);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPoint(point, index, color) {
+      const radius = toCanvasSize(displayPointRadius);
+      const fontSize = toCanvasSize(12);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(index), point.x, point.y + toCanvasSize(0.5));
+      ctx.restore();
+    }
+
+    function drawEmptyState() {
+      const centerX = cv.width / 2;
+      const centerY = cv.height / 2;
+      const iconWidth = 100;
+      const iconHeight = 78;
+      const iconX = centerX - iconWidth / 2;
+      const iconY = centerY - iconHeight / 2 - 24;
+
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      ctx.strokeStyle = '#b7b7b7';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      ctx.strokeRect(iconX, iconY, iconWidth, iconHeight);
+
+      ctx.beginPath();
+      ctx.arc(iconX + 28, iconY + 24, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#b7b7b7';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(iconX + 10, iconY + iconHeight - 12);
+      ctx.lineTo(iconX + 38, iconY + 43);
+      ctx.lineTo(iconX + 54, iconY + 58);
+      ctx.lineTo(iconX + 74, iconY + 34);
+      ctx.lineTo(iconX + iconWidth - 10, iconY + iconHeight - 12);
+      ctx.closePath();
+      ctx.fillStyle = '#d5d5d5';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawDragPreview(point) {
+      if (!drag || !point) return;
+
+      const radius = toCanvasSize(displayPointRadius);
+      const offsetX = toCanvasSize(previewOffset.x);
+      const offsetY = toCanvasSize(previewOffset.y);
+
+      const preview = {
+        x: Math.max(radius + toCanvasSize(4), point.x + offsetX),
+        y: Math.max(radius + toCanvasSize(4), point.y + offsetY),
+      };
+
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.lineWidth = toCanvasSize(2);
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(preview.x, preview.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(preview.x, preview.y, radius + toCanvasSize(5), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+      ctx.fill();
+      ctx.strokeStyle = '#222222';
+      ctx.stroke();
+
+      ctx.fillStyle = '#222222';
+      ctx.font = `bold ${toCanvasSize(14)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('현재', preview.x, preview.y + toCanvasSize(1));
+      ctx.restore();
+    }
+
+    function draw(activePoint = null) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+
+      if (!hasImage()) {
+        drawEmptyState();
+        return;
+      }
+
+      ctx.drawImage(
+        img,
+        crop.sx,
+        crop.sy,
+        crop.sw,
+        crop.sh,
+        0,
+        0,
+        cv.width,
+        cv.height,
+      );
+
+      if (head.length === 4) {
+        const cx = (head[2].x + head[3].x) / 2;
+        const cy = (head[0].y + head[1].y) / 2;
+
+        ctx.save();
+        ctx.strokeStyle = '#f5a623';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(cx, 0);
+        ctx.lineTo(cx, cv.height);
+        ctx.stroke();
+        ctx.restore();
+
+        drawGuide(cx, cy, 30);
+        drawGuide(cx, cy, -30);
+      }
+
+      if (diag.length >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#178bff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(diag[0].x, diag[0].y);
+        ctx.lineTo(diag[1].x, diag[1].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (diag.length === 4) {
+        ctx.save();
+        ctx.strokeStyle = '#178bff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(diag[2].x, diag[2].y);
+        ctx.lineTo(diag[3].x, diag[3].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 기준선과 대각선 위에 포인트를 다시 그려서 선에 가려지지 않도록 합니다.
+      head.forEach((point, index) => {
+        drawPoint(point, index + 1, '#ef4438');
+      });
+
+      diag.forEach((point, index) => {
+        drawPoint(point, index + 5, '#55bf62');
+      });
+
+      drawDragPreview(activePoint);
+    }
+
+    function ciGrade(ci) {
+      if (ci <= 90) return '정상 범위';
+      if (ci <= 92) return '자세교정 가능';
+      if (ci <= 94) return '자세교정 어려움';
+      if (ci <= 96) return '자세교정 불가';
+      if (ci <= 99) return '심한 변형';
+      return '극심한 변형';
+    }
+
+    function cvaiGrade(value) {
+      if (value < 3.5) return '정상 범위';
+      if (value < 6.25) return '경도 비대칭';
+      if (value < 8.75) return '중등도 비대칭';
+      if (value < 11) return '중증 비대칭';
+      return '매우 중증 비대칭';
+    }
+
+    function calc() {
+      const a = Math.hypot(diag[1].x - diag[0].x, diag[1].y - diag[0].y);
+      const b = Math.hypot(diag[3].x - diag[2].x, diag[3].y - diag[2].y);
+      const cvai = ((Math.max(a, b) - Math.min(a, b)) / Math.max(a, b)) * 100;
+
+      const width = Math.hypot(head[3].x - head[2].x, head[3].y - head[2].y);
+      const height = Math.hypot(head[1].x - head[0].x, head[1].y - head[0].y);
+      const ci = (width / height) * 100;
+
+      result.innerHTML = `
+        <b>사두증(CVAI)</b> ${cvai.toFixed(2)}%<br>
+        ${cvaiGrade(cvai)}<br><br>
+        <b>단두증(CI)</b> ${ci.toFixed(1)}<br>
+        ${ciGrade(ci)}
+      `;
+    }
+
+    function resetAll() {
+      if (!confirm('초기화하겠습니까?')) return;
+
+      head = [];
+      diag = [];
+      drag = null;
+      result.innerHTML = '';
+      updateStepGuide();
+      draw();
+    }
+
+    setupEmptyCanvas();
+  </script>
+</body>
+</html>
