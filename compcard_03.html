@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1"><style>
+body{font-family:Arial;background:#eee;margin:0;padding:10px}.wrap{max-width:430px;margin:auto}.card{background:#fff;border:1px solid #bbb;border-radius:18px;padding:16px;transform-origin:top left}
+.inner{display:flex;gap:16px}.l{width:40%}.big,.sm{background:#ddd;display:flex;align-items:center;justify-content:center;color:#666}.big{aspect-ratio:3/4}.r{flex:1}.smrow{display:flex;gap:10px;margin-top:16px}.sm{flex:1;aspect-ratio:3/4}.n1{font-size:18px;font-weight:700}.n2{font-size:13px;font-weight:700}.t{font-size:11px;line-height:1.4}.form{background:#fff;border-radius:16px;padding:12px;margin-top:12px}input{width:100%;padding:8px;margin:5px 0;box-sizing:border-box}
+</style></head><body><div class=wrap><div class=card><div class=inner><div class=l><div class=big>+ 사진선택</div></div><div class=r><div class=n1 id=en>KIM HANA</div><div class=n2 id=kr>김하나</div><div class=t>HEIGHT <span id=h>172 cm</span><br>WEIGHT <span id=w>50 kg</span><br>SHOES <span id=s>245 mm</span><br>TEL <span id=tel>010 1234 1234</span></div><div class=smrow><div class=sm>+ 사진</div><div class=sm>+ 사진</div></div></div></div></div>
+<div class=form>
+<input value="KIM HANA" oninput="en.textContent=this.value">
+<input value="김하나" oninput="kr.textContent=this.value">
+<input value="172 cm" oninput="h.textContent=this.value">
+<input value="50 kg" oninput="w.textContent=this.value">
+<input value="245 mm" oninput="s.textContent=this.value">
+<input value="010 1234 1234" oninput="tel.textContent=this.value">
+</div></div></body></html>
