@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BBD</title>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --panel-solid: #ffffff;
+      --panel-soft: #f1f5f9;
+      --border: #e5e7eb;
+      --border-strong: #d5dbe5;
+      --text: #171717;
+      --muted: #667085;
+      --muted-light: #98a2b3;
+      --primary: #111827;
+      --primary-hover: #030712;
+      --red: #ff5a5f;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --orange: #f59e0b;
+      --guide-accent: #2563eb;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", sans-serif;
+      text-align: center;
+    }
+
+    .wrap {
+      width: min(100%, 720px);
+      margin: 0 auto;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2px auto 14px;
+      color: #111111;
+      font-size: clamp(34px, 10vw, 58px);
+      font-weight: 950;
+      line-height: 0.9;
+      letter-spacing: 0.025em;
+      font-family: Arial Black, Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .brand-logo span {
+      display: inline-block;
+      transform: scaleX(1.08);
+    }
+
+    button,
+    .file-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 104px;
+      min-height: 42px;
+      padding: 11px 18px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--panel-solid);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: var(--shadow-soft);
+      transition:
+        transform 0.16s ease,
+        box-shadow 0.16s ease,
+        background 0.16s ease,
+        border-color 0.16s ease;
+    }
+
+    button:hover,
+    .file-button:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.10);
+    }
+
+    button:active,
+    .file-button:active {
+      transform: translateY(0);
+      box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .file-button {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .file-button:hover {
+      border-color: var(--primary-hover);
+      background: var(--primary-hover);
+    }
+
+    #resetBtn {
+      background: #ffffff;
+      color: #475467;
+    }
+
+    #imgInput {
+      display: none;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 14px 0 0;
+      width: 100%;
+    }
+
+    .step-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 10px;
+    }
+
+    #stepGuide {
+      flex: 1;
+      margin: 0;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.4;
+      text-align: left;
+      letter-spacing: -0.02em;
+    }
+
+    .guide-toggle {
+      flex: 0 0 auto;
+      min-width: auto;
+      min-height: auto;
+      padding: 4px 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--guide-accent);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: none;
+      gap: 6px;
+    }
+
+    .guide-toggle:hover,
+    .guide-toggle:active {
+      transform: none;
+      background: transparent;
+      box-shadow: none;
+      color: #1d4ed8;
+    }
+
+    .guide-toggle::after {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-right: 1.8px solid currentColor;
+      border-bottom: 1.8px solid currentColor;
+      transform: rotate(45deg) translateY(-2px);
+      transform-origin: 55% 55%;
+      transition: transform 0.18s ease;
+    }
+
+    .guide-toggle.is-open::after {
+      transform: rotate(225deg) translateY(-2px);
+    }
+
+    .guide-card {
+      display: none;
+      margin: 0 auto 14px;
+      padding: 18px 16px 16px;
+      background: var(--panel-solid);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .guide-card.is-open {
+      display: block;
+    }
+
+    .guide-title {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.4;
+      text-align: center;
+      letter-spacing: -0.01em;
+    }
+
+    .guide-svg {
+      display: block;
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+      margin: 0 auto;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      border: 1px solid rgba(213, 219, 229, 0.9);
+      border-radius: 22px;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+      touch-action: none;
+      cursor: crosshair;
+      overflow: hidden;
+    }
+
+    canvas.is-empty {
+      cursor: pointer;
+    }
+
+    #result {
+      min-height: 1em;
+      margin-top: 14px;
+      color: #1f2937;
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.02em;
+    }
+
+
+    #result b {
+      font-weight: 800;
+    }
+
+    .notice {
+      margin: 16px auto 0;
+      color: var(--muted-light);
+      font-size: 12px;
+      line-height: 1.6;
+      letter-spacing: -0.01em;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+
+      .brand-logo {
+        margin-bottom: 14px;
+      }
+
+      .brand-logo {
+        font-size: clamp(30px, 12vw, 46px);
+        margin-bottom: 12px;
+      }
+
+      button,
+      .file-button {
+        min-width: 92px;
+        min-height: 40px;
+        padding: 10px 15px;
+        font-size: 13px;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+    <div class="brand-logo" aria-label="BBD 로고"><span>BBD</span></div>
+
+    <div class="step-row">
+      <p id="stepGuide" aria-live="polite">사진을 선택하세요</p>
+      <button type="button" id="guideToggle" class="guide-toggle" aria-expanded="false">사용안내</button>
+    </div>
+
+    <section id="guideCard" class="guide-card" aria-label="클릭 순서 안내">
+      <svg class="guide-svg" viewBox="0 0 720 300" role="img" aria-label="1번부터 8번까지 클릭 위치 안내 이미지">
+        <defs>
+          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.14" />
+          </filter>
+        </defs>
+
+        <!-- 1~4: 머리 상하좌우 기준점 -->
+        <circle cx="190" cy="155" r="112" fill="#e9eef5" />
+        <text x="190" y="163" text-anchor="middle" font-size="28" fill="#667085">머리</text>
+
+        <g filter="url(#softShadow)" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">
+          <circle cx="190" cy="44" r="30" fill="#ff5a5f" />
+          <text x="190" y="52">1</text>
+
+          <circle cx="190" cy="266" r="30" fill="#ff5a5f" />
+          <text x="190" y="274">2</text>
+
+          <circle cx="78" cy="155" r="30" fill="#ff5a5f" />
+          <text x="78" y="163">3</text>
+
+          <circle cx="302" cy="155" r="30" fill="#ff5a5f" />
+          <text x="302" y="163">4</text>
+        </g>
+
+        <!-- 5~8: 대각선 길이 비교 기준점 -->
+        <circle cx="530" cy="155" r="112" fill="#e9eef5" />
+        <line x1="455" y1="62" x2="605" y2="248" stroke="#b6c2d0" stroke-width="5" stroke-dasharray="8 8" />
+        <line x1="605" y1="62" x2="455" y2="248" stroke="#b6c2d0" stroke-width="5" stroke-dasharray="8 8" />
+        <text x="530" y="163" text-anchor="middle" font-size="28" fill="#667085">머리</text>
+
+        <g filter="url(#softShadow)" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">
+          <circle cx="455" cy="62" r="30" fill="#22c55e" />
+          <text x="455" y="70">5</text>
+
+          <circle cx="605" cy="248" r="30" fill="#22c55e" />
+          <text x="605" y="256">6</text>
+
+          <circle cx="605" cy="62" r="30" fill="#22c55e" />
+          <text x="605" y="70">7</text>
+
+          <circle cx="455" cy="248" r="30" fill="#22c55e" />
+          <text x="455" y="256">8</text>
+        </g>
+      </svg>
+
+      <p class="guide-title">사진을 첨부한 후 순서대로 점을 찍어주세요</p>
+    </section>
+
+    <canvas id="cv" aria-label="사진 측정 영역"></canvas>
+
+    <div class="button-row">
+      <label for="imgInput" class="file-button">사진선택</label>
+      <input type="file" id="imgInput" accept="image/*">
+      <button type="button" id="resetBtn">초기화</button>
+    </div>
+
+    <div id="result" aria-live="polite"></div>
+
+    <p class="notice">참고용 결과이며 의료적 진단을 대체하지 않습니다.</p>
+  </main>
+
+  <script>
+    const cv = document.getElementById('cv');
+    const ctx = cv.getContext('2d');
+    const result = document.getElementById('result');
+    const imgInput = document.getElementById('imgInput');
+    const resetBtn = document.getElementById('resetBtn');
+    const stepGuide = document.getElementById('stepGuide');
+    const guideToggle = document.getElementById('guideToggle');
+    const guideCard = document.getElementById('guideCard');
+
+    const displayPointRadius = 10;
+    const displayHitRadius = 36;
+    const previewOffset = { x: -42, y: -42 };
+    const emptyCanvasSize = { width: 760, height: 520 };
+    const stepMessages = [
+      '위쪽(1번) 점을 찍어주세요',
+      '아래쪽(2번) 점을 찍어주세요',
+      '왼쪽(3번) 점을 찍어주세요',
+      '오른쪽(4번) 점을 찍어주세요',
+      '좌측상단(5번) 점을 찍어주세요',
+      '우측하단(6번) 점을 찍어주세요',
+      '우측상단(7번) 점을 찍어주세요',
+      '좌측하단(8번) 점을 찍어주세요',
+    ];
+
+    let img = new Image();
+    let head = [];
+    let diag = [];
+    let drag = null;
+
+    let crop = {
+      sx: 0,
+      sy: 0,
+      sw: 0,
+      sh: 0,
+    };
+
+    function getCanvasScale() {
+      const rect = cv.getBoundingClientRect();
+      return cv.width / rect.width || 1;
+    }
+
+    function toCanvasSize(displaySize) {
+      return displaySize * getCanvasScale();
+    }
+
+    function hasImage() {
+      return Boolean(img.src);
+    }
+
+    function updateStepGuide() {
+      if (!hasImage()) {
+        stepGuide.textContent = '사진을 선택하세요';
+        return;
+      }
+
+      const pointCount = head.length + diag.length;
+      stepGuide.textContent = stepMessages[pointCount] || '점을 드래그하여 위치를 수정할 수 있습니다';
+    }
+
+    function setupEmptyCanvas() {
+      img = new Image();
+      cv.classList.add('is-empty');
+      cv.width = emptyCanvasSize.width;
+      cv.height = emptyCanvasSize.height;
+      updateStepGuide();
+      draw();
+    }
+
+    function setupCrop() {
+      const targetRatio = 1 / 1.2;
+
+      if ((img.width / img.height) > targetRatio) {
+        crop.sh = img.height;
+        crop.sw = img.height * targetRatio;
+        crop.sx = (img.width - crop.sw) / 2;
+        crop.sy = 0;
+      } else {
+        crop.sw = img.width;
+        crop.sh = img.width / targetRatio;
+        crop.sx = 0;
+        crop.sy = (img.height - crop.sh) / 2;
+      }
+
+      cv.classList.remove('is-empty');
+      cv.width = Math.round(crop.sw);
+      cv.height = Math.round(crop.sh);
+    }
+
+    function openPhotoPicker() {
+      imgInput.click();
+    }
+
+    imgInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = (loadEvent) => {
+        img.onload = () => {
+          setupCrop();
+          head = [];
+          diag = [];
+          drag = null;
+          result.innerHTML = '';
+          updateStepGuide();
+          draw();
+        };
+
+        img.src = loadEvent.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    resetBtn.addEventListener('click', resetAll);
+
+    guideToggle.addEventListener('click', () => {
+      const isOpen = guideCard.classList.toggle('is-open');
+      guideToggle.classList.toggle('is-open', isOpen);
+      guideToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    function getPointer(event) {
+      const rect = cv.getBoundingClientRect();
+
+      return {
+        x: (event.clientX - rect.left) * (cv.width / rect.width),
+        y: (event.clientY - rect.top) * (cv.height / rect.height),
+      };
+    }
+
+    function hit(point, target) {
+      return Math.hypot(point.x - target.x, point.y - target.y) < toCanvasSize(displayHitRadius);
+    }
+
+    function findDragTarget(point) {
+      for (let i = 0; i < head.length; i += 1) {
+        if (hit(point, head[i])) return { type: 'head', index: i };
+      }
+
+      for (let i = 0; i < diag.length; i += 1) {
+        if (hit(point, diag[i])) return { type: 'diag', index: i };
+      }
+
+      return null;
+    }
+
+    function addPoint(point) {
+      if (head.length < 4) {
+        head.push(point);
+      } else if (diag.length < 4) {
+        diag.push(point);
+      }
+
+      updateStepGuide();
+      draw();
+
+      if (diag.length === 4) {
+        calc();
+      }
+    }
+
+    cv.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+
+      if (!hasImage()) {
+        openPhotoPicker();
+        return;
+      }
+
+      cv.setPointerCapture(event.pointerId);
+
+      const point = getPointer(event);
+      const target = findDragTarget(point);
+
+      if (target) {
+        drag = {
+          ...target,
+          pointerId: event.pointerId,
+        };
+      } else {
+        drag = null;
+      }
+    });
+
+    cv.addEventListener('pointermove', (event) => {
+      if (!drag || drag.pointerId !== event.pointerId) return;
+
+      event.preventDefault();
+      const point = getPointer(event);
+
+      if (drag.type === 'head') {
+        head[drag.index] = point;
+      } else {
+        diag[drag.index] = point;
+      }
+
+      draw(point);
+
+      if (diag.length === 4) {
+        calc();
+      }
+    });
+
+    cv.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+
+      if (!hasImage()) {
+        drag = null;
+        return;
+      }
+
+      if (!drag) {
+        addPoint(getPointer(event));
+      }
+
+      drag = null;
+      draw();
+    });
+
+    cv.addEventListener('pointercancel', () => {
+      drag = null;
+      draw();
+    });
+
+    function drawGuide(cx, cy, deg) {
+      const radian = deg * Math.PI / 180;
+      const len = Math.max(cv.width, cv.height);
+      const dx = Math.sin(radian) * len;
+      const dy = Math.cos(radian) * len;
+
+      ctx.save();
+      ctx.setLineDash([toCanvasSize(8), toCanvasSize(6)]);
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = toCanvasSize(2.5);
+      ctx.beginPath();
+      ctx.moveTo(cx - dx, cy + dy);
+      ctx.lineTo(cx + dx, cy - dy);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPoint(point, index, color) {
+      const radius = toCanvasSize(displayPointRadius);
+      const fontSize = toCanvasSize(12);
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(15, 23, 42, 0.22)';
+      ctx.shadowBlur = toCanvasSize(8);
+      ctx.shadowOffsetY = toCanvasSize(3);
+
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, radius + toCanvasSize(2), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      ctx.fill();
+
+      ctx.shadowColor = 'transparent';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(index), point.x, point.y + toCanvasSize(0.5));
+      ctx.restore();
+    }
+
+    function drawEmptyState() {
+      const centerX = cv.width / 2;
+      const centerY = cv.height / 2;
+      const iconWidth = 112;
+      const iconHeight = 84;
+      const iconX = centerX - iconWidth / 2;
+      const iconY = centerY - iconHeight / 2 - 10;
+
+      ctx.save();
+      const gradient = ctx.createLinearGradient(0, 0, 0, cv.height);
+      gradient.addColorStop(0, '#ffffff');
+      gradient.addColorStop(1, '#f8fafc');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+
+      ctx.fillStyle = '#f1f5f9';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 5;
+      ctx.lineJoin = 'round';
+      ctx.roundRect(iconX, iconY, iconWidth, iconHeight, 14);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(iconX + 31, iconY + 26, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(iconX + 12, iconY + iconHeight - 14);
+      ctx.lineTo(iconX + 41, iconY + 46);
+      ctx.lineTo(iconX + 58, iconY + 62);
+      ctx.lineTo(iconX + 79, iconY + 36);
+      ctx.lineTo(iconX + iconWidth - 12, iconY + iconHeight - 14);
+      ctx.closePath();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawDragPreview(point) {
+      if (!drag || !point) return;
+
+      const radius = toCanvasSize(displayPointRadius);
+      const offsetX = toCanvasSize(previewOffset.x);
+      const offsetY = toCanvasSize(previewOffset.y);
+
+      const preview = {
+        x: Math.max(radius + toCanvasSize(4), point.x + offsetX),
+        y: Math.max(radius + toCanvasSize(4), point.y + offsetY),
+      };
+
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.lineWidth = toCanvasSize(2);
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(preview.x, preview.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(preview.x, preview.y, radius + toCanvasSize(5), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+      ctx.fill();
+      ctx.strokeStyle = '#222222';
+      ctx.stroke();
+
+      ctx.fillStyle = '#222222';
+      ctx.font = `bold ${toCanvasSize(14)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('현재', preview.x, preview.y + toCanvasSize(1));
+      ctx.restore();
+    }
+
+    function draw(activePoint = null) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+
+      if (!hasImage()) {
+        drawEmptyState();
+        return;
+      }
+
+      ctx.drawImage(
+        img,
+        crop.sx,
+        crop.sy,
+        crop.sw,
+        crop.sh,
+        0,
+        0,
+        cv.width,
+        cv.height,
+      );
+
+      if (head.length === 4) {
+        const cx = (head[2].x + head[3].x) / 2;
+        const cy = (head[0].y + head[1].y) / 2;
+
+        ctx.save();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = toCanvasSize(3);
+        ctx.beginPath();
+        ctx.moveTo(cx, 0);
+        ctx.lineTo(cx, cv.height);
+        ctx.stroke();
+        ctx.restore();
+
+        drawGuide(cx, cy, 30);
+        drawGuide(cx, cy, -30);
+      }
+
+      if (diag.length >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = toCanvasSize(3);
+        ctx.beginPath();
+        ctx.moveTo(diag[0].x, diag[0].y);
+        ctx.lineTo(diag[1].x, diag[1].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (diag.length === 4) {
+        ctx.save();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = toCanvasSize(3);
+        ctx.beginPath();
+        ctx.moveTo(diag[2].x, diag[2].y);
+        ctx.lineTo(diag[3].x, diag[3].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 기준선과 대각선 위에 포인트를 다시 그려서 선에 가려지지 않도록 합니다.
+      head.forEach((point, index) => {
+        drawPoint(point, index + 1, '#ff5a5f');
+      });
+
+      diag.forEach((point, index) => {
+        drawPoint(point, index + 5, '#22c55e');
+      });
+
+      drawDragPreview(activePoint);
+    }
+
+    function ciGrade(ci) {
+      if (ci <= 90) return '정상 범위';
+      if (ci <= 92) return '자세교정 가능';
+      if (ci <= 94) return '자세교정 어려움';
+      if (ci <= 96) return '자세교정 불가';
+      if (ci <= 99) return '심한 변형';
+      return '극심한 변형';
+    }
+
+    function cvaiGrade(value) {
+      if (value < 3.5) return '정상 범위';
+      if (value < 6.25) return '경도 비대칭';
+      if (value < 8.75) return '중등도 비대칭';
+      if (value < 11) return '중증 비대칭';
+      return '매우 중증 비대칭';
+    }
+
+    function calc() {
+      const a = Math.hypot(diag[1].x - diag[0].x, diag[1].y - diag[0].y);
+      const b = Math.hypot(diag[3].x - diag[2].x, diag[3].y - diag[2].y);
+      const cvai = ((Math.max(a, b) - Math.min(a, b)) / Math.max(a, b)) * 100;
+
+      const width = Math.hypot(head[3].x - head[2].x, head[3].y - head[2].y);
+      const height = Math.hypot(head[1].x - head[0].x, head[1].y - head[0].y);
+      const ci = (width / height) * 100;
+
+      result.innerHTML = `
+        <b>사두증(CVAI)</b> ${cvai.toFixed(2)}%<br>
+        ${cvaiGrade(cvai)}<br><br>
+        <b>단두증(CI)</b> ${ci.toFixed(1)}<br>
+        ${ciGrade(ci)}
+      `;
+    }
+
+    function resetAll() {
+      if (!confirm('초기화하겠습니까?')) return;
+
+      head = [];
+      diag = [];
+      drag = null;
+      result.innerHTML = '';
+      updateStepGuide();
+      draw();
+    }
+
+    setupEmptyCanvas();
+  </script>
+</body>
+</html>
